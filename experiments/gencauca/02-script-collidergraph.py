@@ -117,7 +117,7 @@ def run_exp(training_seed, overwrite=False):
     )
 
     # Train the model
-    max_epochs = 500
+    max_epochs = 200
     accelerator = "cuda"
     # accelerator = "cpu"
 
