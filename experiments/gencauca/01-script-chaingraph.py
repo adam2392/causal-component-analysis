@@ -16,7 +16,7 @@ from model.utils import mean_correlation_coefficient
 def run_exp(training_seed, overwrite=False):
     results_dir = Path("./results/")
     results_dir.mkdir(exist_ok=True, parents=True)
-    fname = results_dir / f"chaingraph-{training_seed}-results.npz"
+    fname = results_dir / f"chaingraph-extraperfect-{training_seed}-results.npz"
     if not overwrite and fname.exists():
         return
     

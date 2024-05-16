@@ -118,7 +118,7 @@ def run_exp(training_seed, overwrite=False):
 
     # Train the model
     max_epochs = 500
-    accelerator = "mps"
+    accelerator = "cuda"
     # accelerator = "cpu"
 
     trainer = pl.Trainer(
