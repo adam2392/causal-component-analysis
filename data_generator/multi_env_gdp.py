@@ -133,6 +133,133 @@ class MultiEnvDGP:
             intervention_targets_out,
             log_prob,
         )
+    
+
+
+class LatentDGP:
+    """Latent variable data generating process (DGP).
+
+    The DGP is defined by a latent structural causal model (SCM), a noise generator and a mixing function.
+    This class is used to generate data from those three components.
+
+    The latent SCM is a multi-environment SCM, i.e. it generates data for multiple environments which
+    differ by interventions on some of the variables. The noise generator is also multi-environmental,
+    i.e. it generates noise for multiple environments. The mixing function is a function that maps the
+    latent variables to the observed variables. The mixing function is the same for all environments.
+
+    Attributes
+    ----------
+    mixing_function: MixingFunction
+        Mixing function.
+    latent_scm: MultiEnvLatentSCM
+        Multi-environment latent SCM.
+    noise_generator: MultiEnvNoise
+        Multi-environment noise generator.
+
+    Methods
+    -------
+    sample(num_samples_per_env, intervention_targets_per_env) -> tuple[Tensor, ...]
+        Sample from the DGP.
+    """
+
+    def __init__(
+        self,
+        mixing_function: MixingFunction,
+        latent_scm: MultiEnvLatentSCM,
+        noise_generator: MultiEnvNoise,
+    ) -> None:
+        self.mixing_function = mixing_function
+        self.latent_scm = latent_scm
+        self.noise_generator = noise_generator
+        self.adjacency_matrix = self.latent_scm.adjacency_matrix
+
+    def sample(
+        self,
+        num_samples_per_env: int,
+        intervention_targets_per_env: Tensor,
+    ) -> tuple[Tensor, ...]:
+        """
+        Sample from the DGP.
+
+        Parameters
+        ----------
+        num_samples_per_env: int
+            Number of samples to generate per environment.
+        intervention_targets_per_env: Tensor, shape (num_envs, num_causal_variables)
+            Intervention targets per environment, with 1 indicating that the variable is intervened on
+            and 0 indicating that the variable is not intervened on. This variable also implicitly defines
+            the number of environments.
+
+        Returns
+        -------
+        x: Tensor, shape (num_samples_per_env * num_envs, observation_dim)
+            Samples of observed variables.
+        v: Tensor, shape (num_samples_per_env * num_envs, latent_dim)
+            Samples of latent variables.
+        u: Tensor, shape (num_samples_per_env * num_envs, latent_dim)
+            Samples of exogenous noise variables.
+        e: Tensor, shape (num_samples_per_env * num_envs, 1)
+            Environment indicator.
+        intervention_targets: Tensor, shape (num_samples_per_env * num_envs, latent_dim)
+            Intervention targets.
+        log_prob: Tensor, shape (num_samples_per_env * num_envs, 1)
+            Ground-truth log probability of the samples.
+        """
+        num_envs = intervention_targets_per_env.shape[0]
+        shape = (
+            num_samples_per_env,
+            num_envs,
+            self.latent_scm.latent_dim,
+        )
+        u = torch.zeros(shape)
+        v = torch.zeros(shape)
+        intervention_targets_out = torch.zeros(shape)
+        e = torch.zeros((num_samples_per_env, num_envs, 1), dtype=torch.long)
+        log_prob = torch.zeros((num_samples_per_env, num_envs, 1))
+
+        for env in range(num_envs):
+            int_targets_env = intervention_targets_per_env[env, :]
+
+            noise_samples_env = self.noise_generator.sample(
+                env, size=num_samples_per_env
+            )
+            noise_log_prob_env = self.noise_generator.log_prob(noise_samples_env, env)
+
+            latent_samples_env = self.latent_scm.push_forward(noise_samples_env, env)
+            log_det_scm = self.latent_scm.log_inverse_jacobian(
+                latent_samples_env, noise_samples_env, env
+            )
+
+            intervention_targets_out[:, env, :] = int_targets_env
+            u[:, env, :] = noise_samples_env
+            v[:, env, :] = latent_samples_env
+            e[:, env, :] = env
+            log_prob[:, env, :] = (
+                log_det_scm + noise_log_prob_env.sum(dim=1)
+            ).unsqueeze(1)
+
+        flattened_shape = (num_samples_per_env * num_envs, self.latent_scm.latent_dim)
+        intervention_targets_out = intervention_targets_out.reshape(flattened_shape)
+        u = u.reshape(flattened_shape)
+        v = v.reshape(flattened_shape)
+        e = e.reshape(num_samples_per_env * num_envs, 1)
+        log_prob = log_prob.reshape(num_samples_per_env * num_envs, 1)
+
+        x = self.mixing_function(v)
+        unmixing_jacobian = self.mixing_function.unmixing_jacobian(v)
+        log_det_unmixing_jacobian = torch.slogdet(
+            unmixing_jacobian
+        ).logabsdet.unsqueeze(1)
+        log_prob += log_det_unmixing_jacobian
+
+        return (
+            x,
+            v,
+            u,
+            e,
+            intervention_targets_out,
+            log_prob,
+        )
 
 
 def make_multi_env_dgp(

@@ -450,27 +450,15 @@ import torch
 
 
 DGP = {
-    "graph-3-a": {
-        "num_causal_variables": 4,  # N
-        "latent_variables": [3],  # latent variables 0-indexed
+    "graph-4-0": {
+        "num_causal_variables": 3,  # N
         "adj_matrix": np.array(
-            [
-                [0, 1, 0, 0], 
-                [0, 0, 1, 0], 
-                [0, 0, 0, 0],
-                [0, 1, 1, 0], # unobserved confounder
-            ]
+            [[0, 1, 0], [0, 0, 1], [0, 0, 0]]
         ),
         "int_targets": torch.tensor(
-            [
-                [0, 0, 0, 0], 
-                [1, 0, 0, 0], 
-                [0, 1, 0, 0], 
-                [0, 0, 1, 0], 
-                [0, 0, 0, 1]
-             ]
+            [[0, 0, 0], [0, 0, 1], [0, 0, 1]]
         ),
         "num_samples_per_env": 200_000,
         "observation_dim": 128,  # D
-    },
+    }
 }

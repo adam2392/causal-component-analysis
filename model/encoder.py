@@ -89,6 +89,8 @@ class CauCAEncoder(nf.NormalizingFlow):
 
         if q0 is None:
             if self.nonparametric_base_distr:
+                print('Using nonparametric causal model')
+                
                 q0 = NonparamMultiEnvCausalDistribution(
                     adjacency_matrix=adjacency_matrix,
                     K=K_cbn,
@@ -96,6 +98,7 @@ class CauCAEncoder(nf.NormalizingFlow):
                     net_hidden_layers=net_hidden_layers_cbn,
                 )
             else:
+                print('Using parametric causal distributions! Interventions are considered hard!')
                 assert (
                     intervention_targets_per_env is not None
                 ), "intervention_targets_per_env must be provided for parametric base distribution"

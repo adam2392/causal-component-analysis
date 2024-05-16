@@ -1,6 +1,6 @@
 # os specific
 .DS_Store
-
+results/
 
 # Distribution / packaging
 .Python
