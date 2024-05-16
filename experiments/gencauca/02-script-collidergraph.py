@@ -40,7 +40,7 @@ def run_exp(training_seed, overwrite=False):
     )
 
     num_samples = 100_000
-    batch_size = 1024
+    batch_size = 4096
     n_jobs = 4
 
     # Define the data generating model
