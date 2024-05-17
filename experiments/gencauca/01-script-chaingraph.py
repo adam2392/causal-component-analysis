@@ -16,24 +16,39 @@ from model.utils import mean_correlation_coefficient
 def run_exp(training_seed, overwrite=False):
     results_dir = Path("./results/")
     results_dir.mkdir(exist_ok=True, parents=True)
+    
+    # chain-graph 01: all soft
+    interv_targets = torch.tensor([[0, 0, 0], [0, 0, 1], [0, 0, 1]])
+    fname = results_dir / f"chaingraph-{training_seed}-results.npz"
+    nonparametric_base_distr = True  # if True, we use soft, if false we use hard
+
+    # Note: if interventions must be hard, or soft, we can replicate the same
+    # theoretical result with 2 hard on V2 and 2 hard on V3
+    #
+    # 1. If do(V3') and do(V3), we disentangle V1 and V2 from V3 (i.e V3 is ID wrt {v1, v2}),
+    #    w/ obs V1 is also disentangled from V2 and V3.
+    # 2. Then w/ do(V2)
+    interv_targets = torch.tensor(
+        [
+            [0, 0, 0],  # observational
+            [0, 0, 1],
+            [0, 0, 1],
+            [0, 1, 0],  # [0, 1, 0],
+        ]
+    )
+    nonparametric_base_distr = False  # if True, we use soft, if false we use hard
     fname = results_dir / f"chaingraph-extraperfect-{training_seed}-results.npz"
+
+    noise_shift_type = 'mean-std'
+    # noise_shift_type = 'mean'
     if not overwrite and fname.exists():
         return
-    
+
     pl.seed_everything(training_seed, workers=True)
 
     # chain graph V1 -> V2 -> V3
     latent_dim = 3
     adjacency_matrix = np.array([[0, 1, 0], [0, 0, 1], [0, 0, 0]])
-
-    interv_targets = torch.tensor([[0, 0, 0], [0, 0, 1], [0, 0, 1]])
-    
-    # Note: if interventions must be hard, or soft, we can replicate the same
-    # theoretical result with 2 hard on V2 and 2 hard on V3
-    # interv_targets = torch.tensor([[0, 0, 0], 
-    #                                [0, 0, 1], [0, 0, 1],
-    #                                [0, 1, 0], [0, 1, 0],
-    #                                ])
 
     num_samples = 100_000
     batch_size = 4096
@@ -48,7 +63,7 @@ def run_exp(training_seed, overwrite=False):
         observation_dim=3,
         adjacency_matrix=adjacency_matrix,
         intervention_targets_per_env=interv_targets,
-        noise_shift_type="mean",
+        noise_shift_type=noise_shift_type,
         mixing="nonlinear",
         scm="linear",
         n_nonlinearities=1,
@@ -74,7 +89,7 @@ def run_exp(training_seed, overwrite=False):
     lr_scheduler = None
     lr_min = 0.0
     lr = 1e-4
-    
+
     # Define the model
     net_hidden_dim = 128
     net_hidden_dim_cbn = 128
@@ -82,7 +97,6 @@ def run_exp(training_seed, overwrite=False):
     net_hidden_layers_cbn = 3
     fix_mechanisms = False
     fix_all_intervention_targets = True
-    nonparametric_base_distr = True
 
     model = NonlinearCauCAModel(
         latent_dim=latent_dim,
@@ -107,9 +121,15 @@ def run_exp(training_seed, overwrite=False):
     logger = None
     wandb = False
     check_val_every_n_epoch = 1
+    # checkpoint_callback = pl.callbacks.ModelCheckpoint(
+    #     dirpath=checkpoint_dir,
+    #     save_last=True,
+    #     every_n_epochs=check_val_every_n_epoch,
+    # )
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
         dirpath=checkpoint_dir,
-        save_last=True,
+        save_top_k=3,
+        monitor="train_loss",
         every_n_epochs=check_val_every_n_epoch,
     )
 
@@ -118,7 +138,7 @@ def run_exp(training_seed, overwrite=False):
         max_epochs=max_epochs,
         logger=logger,
         devices=1,
-        callbacks=[checkpoint_callback] if wandb else [],
+        callbacks=[checkpoint_callback],
         check_val_every_n_epoch=check_val_every_n_epoch,
         accelerator=accelerator,
     )
@@ -146,7 +166,7 @@ def run_exp(training_seed, overwrite=False):
                 vhat[:, (jdx,)], v[:, (idx,)]
             )
 
-    print('Saving file to: ', fname)
+    print("Saving file to: ", fname)
 
     np.savez_compressed(
         fname,

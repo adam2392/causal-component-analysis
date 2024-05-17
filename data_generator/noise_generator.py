@@ -50,7 +50,7 @@ class MultiEnvNoise(ABC):
         self.mean = mean
         self.std = std
         self.shift = shift
-        assert shift_type in ["mean", "std"], f"Invalid shift type: {shift_type}"
+        assert shift_type in ["mean", "std", 'mean-std'], f"Invalid shift type: {shift_type}"
         self.shift_type = shift_type
 
     def sample(self, e: int, size: int = 1) -> Tensor:
@@ -166,6 +166,42 @@ class GaussianNoise(MultiEnvNoise):
                             )
                             stds[i] = stds[i] * std_scaling_factor
                 stds_per_env[e] = stds
+            elif self.shift_type == 'mean-std':
+                # modify both mean and std per "shift" mechanism
+
+                means = (
+                    torch.ones(self.latent_dim) * self.mean
+                )  # means_per_env per dimension
+                stds = (
+                    torch.ones(self.latent_dim) * self.std
+                )  # stds_per_env per dimension
+                
+                # shift std up or down if mechanism is intervened on
+                if intervention_targets_per_env is not None and self.shift:
+                    for i in range(self.latent_dim):
+                        if intervention_targets_per_env[e][i] == 1:
+                            coin_flip = torch.randint(0, 2, (1,)).item()  # 0 or 1
+                            std_scaling_factor = (
+                                Uniform(0.25, 0.75).sample((1,))
+                                if coin_flip == 0
+                                else Uniform(1.25, 1.75).sample((1,))
+                            )
+                            stds[i] = stds[i] * std_scaling_factor
+                stds_per_env[e] = stds
+
+                # shift mean up or down if mechanism is intervened on
+                if intervention_targets_per_env is not None and self.shift:
+                    for i in range(self.latent_dim):
+                        if intervention_targets_per_env[e][i] == 1:
+                            coin_flip = torch.randint(0, 2, (1,)).item()  # 0 or 1
+                            factor = 2
+                            means[i] = (
+                                self.mean
+                                + coin_flip * factor * self.std
+                                + (1 - coin_flip) * factor * self.std
+                            )
+
+                means_per_env[e] = means
             else:
                 raise ValueError(f"Invalid shift type: {self.shift_type}")
 

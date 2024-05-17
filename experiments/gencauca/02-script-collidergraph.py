@@ -34,14 +34,15 @@ def run_exp(training_seed, overwrite=False):
             [1, 0, 1],
             [1, 0, 1],
             [1, 0, 1],
-            [1, 0, 1],
-            [1, 0, 1],
+            # [1, 0, 1],
+            # [1, 0, 1],
         ]
     )
+    noise_shift_type = "mean-std"
 
     num_samples = 100_000
     batch_size = 4096
-    n_jobs = 4
+    n_jobs = 6
 
     # Define the data generating model
     multi_env_dgp = make_multi_env_dgp(
@@ -49,7 +50,7 @@ def run_exp(training_seed, overwrite=False):
         observation_dim=latent_dim,
         adjacency_matrix=adjacency_matrix,
         intervention_targets_per_env=interv_targets,
-        noise_shift_type="mean",
+        noise_shift_type=noise_shift_type,
         mixing="nonlinear",
         scm="linear",
         n_nonlinearities=1,
@@ -110,9 +111,15 @@ def run_exp(training_seed, overwrite=False):
     logger = None
     wandb = False
     check_val_every_n_epoch = 1
+    # checkpoint_callback = pl.callbacks.ModelCheckpoint(
+    #     dirpath=checkpoint_dir,
+    #     save_last=True,
+    #     every_n_epochs=check_val_every_n_epoch,
+    # )
     checkpoint_callback = pl.callbacks.ModelCheckpoint(
         dirpath=checkpoint_dir,
-        save_last=True,
+        save_top_k=3,
+        monitor="train_loss",
         every_n_epochs=check_val_every_n_epoch,
     )
 
@@ -125,7 +132,7 @@ def run_exp(training_seed, overwrite=False):
         max_epochs=max_epochs,
         logger=logger,
         devices=4,
-        callbacks=[checkpoint_callback] if wandb else [],
+        callbacks=[checkpoint_callback],
         check_val_every_n_epoch=check_val_every_n_epoch,
         accelerator=accelerator,
     )
