@@ -4,6 +4,9 @@
 SCRIPT_NAME="02-script-collidergraph.py"
 # SCRIPT_NAME="01-script-chaingraph.py"
 
+# Set the environment variable
+export CUDA_VISIBLE_DEVICES=2
+
 # Change to the directory containing the script
 # cd "$SCRIPT_DIR"
 
