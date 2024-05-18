@@ -58,11 +58,11 @@ def run_exp(training_seed, overwrite=False):
     max_epochs = 200
     accelerator = "mps"
     devices = 1
-    # accelerator = "cuda"
-    # devices = 2
+    accelerator = "cuda"
+    devices = 1
     # accelerator = "cpu"
-    n_jobs = joblib.cpu_count() - 1
-    print('Running with n_jobs:', n_jobs)
+    n_jobs = 1
+    print("Running with n_jobs:", n_jobs)
 
     # Define the data generating model
     multi_env_dgp = make_multi_env_dgp(
