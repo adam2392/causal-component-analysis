@@ -20,5 +20,5 @@ do
   # or `&` to run the command in the background
   nohup $CMD > output_seed_$TRAINING_SEED.log 2>&1 &
   
-  echo "Submitted job for training seed: $TRAINING_SEED"
+  echo "Submitted job for training seed: $TRAINING_SEED for script: $SCRIPT_NAME"
 done
