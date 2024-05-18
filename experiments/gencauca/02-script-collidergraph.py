@@ -50,7 +50,10 @@ def run_exp(training_seed, overwrite=False):
 
     devices = 1
     accelerator = "cuda"
-    max_epochs = 200
+    max_epochs = 100
+
+    # uses soft interventions when True
+    nonparametric_base_distr = True
 
     # Define the data generating model
     multi_env_dgp = make_multi_env_dgp(
@@ -92,9 +95,6 @@ def run_exp(training_seed, overwrite=False):
     net_hidden_layers_cbn = 3
     fix_mechanisms = False
     fix_all_intervention_targets = True
-
-    # uses soft interventions
-    nonparametric_base_distr = True
 
     model = NonlinearCauCAModel(
         latent_dim=latent_dim,
