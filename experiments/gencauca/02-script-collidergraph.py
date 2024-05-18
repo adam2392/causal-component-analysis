@@ -1,5 +1,7 @@
+import sys
 from pathlib import Path
-
+import argparse
+import joblib 
 import numpy as np
 import pytorch_lightning as pl
 import torch
@@ -16,6 +18,8 @@ PYTORCH_MPS_HIGH_WATERMARK_RATIO = 0.0
 
 
 def run_exp(training_seed, overwrite=False):
+    print(f'Running experiment with seed: {training_seed}')
+    
     results_dir = Path("./results/")
     results_dir.mkdir(exist_ok=True, parents=True)
     fname = results_dir / f"collidergraph-{training_seed}-results.npz"
@@ -42,7 +46,7 @@ def run_exp(training_seed, overwrite=False):
 
     num_samples = 100_000
     batch_size = 4096
-    n_jobs = 6
+    n_jobs = joblib.cpu_count() - 1
 
     # Define the data generating model
     multi_env_dgp = make_multi_env_dgp(
@@ -176,5 +180,20 @@ def run_exp(training_seed, overwrite=False):
 
 
 if __name__ == "__main__":
-    for training_seed in np.linspace(1, 10_000, 11, dtype=int):
-        run_exp(training_seed)
+    parser = argparse.ArgumentParser(
+        description="Run experiment for Causal Component Analysis (CauCA)."
+    )
+    parser.add_argument(
+        "--training-seed",
+        type=int,
+        default=None,
+        help="Training seed.",
+    )
+    args = parser.parse_args()
+
+    # if len(sys.argv) == 1:
+    if args.training_seed is None:
+        for training_seed in np.linspace(1, 10_000, 11, dtype=int):
+            run_exp(training_seed)
+    else:
+        run_exp(args.training_seed)

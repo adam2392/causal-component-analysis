@@ -6,6 +6,7 @@ import torch
 from pytorch_lightning.loggers import WandbLogger
 import torch
 from sklearn.metrics import r2_score
+import joblib
 
 from config import DGP
 from data_generator import MultiEnvDataModule, make_multi_env_dgp
@@ -30,16 +31,16 @@ def run_exp(training_seed, overwrite=False):
     # 1. If do(V3') and do(V3), we disentangle V1 and V2 from V3 (i.e V3 is ID wrt {v1, v2}),
     #    w/ obs V1 is also disentangled from V2 and V3.
     # 2. Then w/ do(V2)
-    # interv_targets = torch.tensor(
-    #     [
-    #         [0, 0, 0],  # observational
-    #         [0, 0, 1],
-    #         [0, 0, 1],
-    #         [0, 1, 0],  # [0, 1, 0],
-    #     ]
-    # )
-    # nonparametric_base_distr = False  # if True, we use soft, if false we use hard
-    # fname = results_dir / f"chaingraph-extraperfect-{training_seed}-results.npz"
+    interv_targets = torch.tensor(
+        [
+            [0, 0, 0],  # observational
+            [0, 0, 1],
+            [0, 0, 1],
+            [0, 1, 0],  # [0, 1, 0],
+        ]
+    )
+    nonparametric_base_distr = False  # if True, we use soft, if false we use hard
+    fname = results_dir / f"chaingraph-extraperfect-{training_seed}-results.npz"
 
     noise_shift_type = "mean-std"
     # noise_shift_type = 'mean'
@@ -57,10 +58,11 @@ def run_exp(training_seed, overwrite=False):
     max_epochs = 200
     accelerator = "mps"
     devices = 1
-    accelerator = "cuda"
-    devices = 2
+    # accelerator = "cuda"
+    # devices = 2
     # accelerator = "cpu"
-    n_jobs = 4
+    n_jobs = joblib.cpu_count() - 1
+    print('Running with n_jobs:', n_jobs)
 
     # Define the data generating model
     multi_env_dgp = make_multi_env_dgp(
@@ -187,5 +189,5 @@ def run_exp(training_seed, overwrite=False):
 
 
 if __name__ == "__main__":
-    # for training_seed in np.linspace(1, 10_000, 11, dtype=int):
-    run_exp(8000)
+    for training_seed in np.linspace(1, 10_000, 11, dtype=int):
+        run_exp(training_seed)
