@@ -46,7 +46,7 @@ def run_exp(training_seed, overwrite=False):
 
     num_samples = 100_000
     batch_size = 4096
-    n_jobs = joblib.cpu_count() - 1
+    n_jobs = 1 #joblib.cpu_count() - 1
 
     devices = 1
     accelerator = "cuda"
