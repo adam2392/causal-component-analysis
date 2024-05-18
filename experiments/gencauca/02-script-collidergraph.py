@@ -19,7 +19,7 @@ PYTORCH_MPS_HIGH_WATERMARK_RATIO = 0.0
 
 def run_exp(training_seed, overwrite=False):
     print(f'Running experiment with seed: {training_seed}')
-    
+
     results_dir = Path("./results/")
     results_dir.mkdir(exist_ok=True, parents=True)
     fname = results_dir / f"collidergraph-{training_seed}-results.npz"
@@ -47,6 +47,10 @@ def run_exp(training_seed, overwrite=False):
     num_samples = 100_000
     batch_size = 4096
     n_jobs = joblib.cpu_count() - 1
+
+    devices = 1
+    accelerator = "cuda"
+    max_epochs = 200
 
     # Define the data generating model
     multi_env_dgp = make_multi_env_dgp(
@@ -128,14 +132,10 @@ def run_exp(training_seed, overwrite=False):
     )
 
     # Train the model
-    max_epochs = 200
-    accelerator = "cuda"
-    # accelerator = "cpu"
-
     trainer = pl.Trainer(
         max_epochs=max_epochs,
         logger=logger,
-        devices=4,
+        devices=devices,
         callbacks=[checkpoint_callback],
         check_val_every_n_epoch=check_val_every_n_epoch,
         accelerator=accelerator,
