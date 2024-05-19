@@ -22,7 +22,7 @@ def run_exp(training_seed, overwrite=False):
 
     results_dir = Path("./results/")
     results_dir.mkdir(exist_ok=True, parents=True)
-    fname = results_dir / f"collidergraph-{training_seed}-results.npz"
+    fname = results_dir / f"collidergraph-{training_seed}-samples={num_samples}-results.npz"
     if not overwrite and fname.exists():
         return
 
@@ -38,13 +38,13 @@ def run_exp(training_seed, overwrite=False):
             [1, 0, 1],
             [1, 0, 1],
             [1, 0, 1],
-            # [1, 0, 1],
+            [1, 0, 1],
             # [1, 0, 1],
         ]
     )
     noise_shift_type = "mean-std"
 
-    num_samples = 100_000
+    num_samples = 200_000
     batch_size = 4096
     n_jobs = 1 #joblib.cpu_count() - 1
 
@@ -67,7 +67,7 @@ def run_exp(training_seed, overwrite=False):
         n_nonlinearities=1,
         scm_coeffs_low=-3,
         scm_coeffs_high=3,
-        coeffs_min_abs_value=1,
+        coeffs_min_abs_value=0.05,
         edge_prob=None,
         snr=1.0,
     )
