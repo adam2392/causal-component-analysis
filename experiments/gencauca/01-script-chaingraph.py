@@ -53,7 +53,7 @@ def run_exp(training_seed, overwrite=False):
     latent_dim = 3
     adjacency_matrix = np.array([[0, 1, 0], [0, 0, 1], [0, 0, 0]])
 
-    num_samples = 100_000
+    num_samples = 200_000
     batch_size = 4096
     max_epochs = 200
     accelerator = "mps"
@@ -74,9 +74,9 @@ def run_exp(training_seed, overwrite=False):
         mixing="nonlinear",
         scm="linear",
         n_nonlinearities=1,
-        scm_coeffs_low=-1,
-        scm_coeffs_high=1,
-        coeffs_min_abs_value=None,
+        scm_coeffs_low=-3,
+        scm_coeffs_high=3,
+        coeffs_min_abs_value=0.5,
         edge_prob=None,
         snr=1.0,
     )
