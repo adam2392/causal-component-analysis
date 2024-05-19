@@ -17,12 +17,14 @@ PYTORCH_MPS_HIGH_WATERMARK_RATIO = 0.0
 
 
 def run_exp(training_seed, overwrite=False):
+    num_samples = 200_000
+
     results_dir = Path("./results/")
     results_dir.mkdir(exist_ok=True, parents=True)
 
     # chain-graph 01: all soft
     interv_targets = torch.tensor([[0, 0, 0], [0, 0, 1], [0, 0, 1]])
-    fname = results_dir / f"chaingraph-{training_seed}-results.npz"
+    fname = results_dir / f"chaingraph-{training_seed}-samples={num_samples}-results.npz"
     nonparametric_base_distr = True  # if True, we use soft, if false we use hard
 
     # Note: if interventions must be hard, or soft, we can replicate the same
@@ -40,7 +42,7 @@ def run_exp(training_seed, overwrite=False):
         ]
     )
     nonparametric_base_distr = False  # if True, we use soft, if false we use hard
-    fname = results_dir / f"chaingraph-extraperfect-{training_seed}-results.npz"
+    fname = results_dir / f"chaingraph-extraperfect-{training_seed}-samples={num_samples}-results.npz"
 
     noise_shift_type = "mean-std"
     # noise_shift_type = 'mean'
@@ -53,7 +55,7 @@ def run_exp(training_seed, overwrite=False):
     latent_dim = 3
     adjacency_matrix = np.array([[0, 1, 0], [0, 0, 1], [0, 0, 0]])
 
-    num_samples = 200_000
+    
     batch_size = 4096
     max_epochs = 200
     accelerator = "mps"
