@@ -23,7 +23,7 @@ def run_exp(training_seed, overwrite=False):
 
     results_dir = Path("./results/")
     results_dir.mkdir(exist_ok=True, parents=True)
-    fname = results_dir / f"collidergraph-{training_seed}-samples={num_samples}-6distr-results.npz"
+    fname = results_dir / f"collidergraph-{training_seed}-samples={num_samples}-6distr-parametric-results.npz"
     if not overwrite and fname.exists():
         return
 
@@ -50,10 +50,10 @@ def run_exp(training_seed, overwrite=False):
 
     devices = 1
     accelerator = "cuda"
-    max_epochs = 200
+    max_epochs = 150
 
     # uses soft interventions when True
-    nonparametric_base_distr = True
+    nonparametric_base_distr = False
 
     # Define the data generating model
     multi_env_dgp = make_multi_env_dgp(
@@ -65,8 +65,8 @@ def run_exp(training_seed, overwrite=False):
         mixing="nonlinear",
         scm="linear",
         n_nonlinearities=1,
-        scm_coeffs_low=-3,
-        scm_coeffs_high=3,
+        scm_coeffs_low=-2,
+        scm_coeffs_high=2,
         coeffs_min_abs_value=0.05,
         edge_prob=None,
         snr=1.0,

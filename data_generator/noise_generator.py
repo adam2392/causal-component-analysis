@@ -194,7 +194,7 @@ class GaussianNoise(MultiEnvNoise):
                     for i in range(self.latent_dim):
                         if intervention_targets_per_env[e][i] == 1:
                             coin_flip = torch.randint(0, 2, (1,)).item()  # 0 or 1
-                            factor = torch.rand(size=(1,)) * 3
+                            factor = torch.rand(size=(1,)) * 1.5 + 0.5
                             means[i] = (
                                 self.mean
                                 + coin_flip * factor * self.std
