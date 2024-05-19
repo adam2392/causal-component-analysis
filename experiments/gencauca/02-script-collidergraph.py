@@ -22,7 +22,7 @@ def run_exp(training_seed, overwrite=False):
 
     results_dir = Path("./results/")
     results_dir.mkdir(exist_ok=True, parents=True)
-    fname = results_dir / f"collidergraph-{training_seed}-samples={num_samples}-results.npz"
+    fname = results_dir / f"collidergraph-{training_seed}-samples={num_samples}-revertvariance-results.npz"
     if not overwrite and fname.exists():
         return
 
@@ -38,7 +38,7 @@ def run_exp(training_seed, overwrite=False):
             [1, 0, 1],
             [1, 0, 1],
             [1, 0, 1],
-            [1, 0, 1],
+            # [1, 0, 1],
             # [1, 0, 1],
         ]
     )
