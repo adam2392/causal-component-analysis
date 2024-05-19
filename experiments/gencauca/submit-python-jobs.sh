@@ -14,10 +14,12 @@ NUM_GPUS=8
 training_seeds=(1 1000 2000 3000 4000 5000 6000 7000 8000 9000 10000)
 
 # Loop over the training seeds and submit a job for each seed
-for TRAINING_SEED in "${training_seeds[@]}"
+for i in "${!training_seeds[@]}"
 do
+  TRAINING_SEED=${training_seeds[$i]}
+  
   # Calculate the GPU index to use for this job
-  GPU_INDEX=$((TRAINING_SEED % NUM_GPUS))
+  GPU_INDEX=$((i % NUM_GPUS))
 
   # Set the environment variable for the GPU
   export CUDA_VISIBLE_DEVICES=$GPU_INDEX
@@ -28,6 +30,7 @@ do
   # Optionally, you can use a job scheduler like `nohup` to run the command in the background
   # or `&` to run the command in the background
   nohup $CMD > output_${SCRIPT_NAME}_seed_${TRAINING_SEED}.log 2>&1 &
-  
+
+  echo $GPU_INDEX
   echo "Submitted job for training seed: $TRAINING_SEED for script: $SCRIPT_NAME"
 done
