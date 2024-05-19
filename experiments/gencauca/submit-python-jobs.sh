@@ -2,7 +2,7 @@
 
 # Directory containing the Python script
 SCRIPT_NAME="02-script-collidergraph.py"
-SCRIPT_NAME="01-script-chaingraph.py"
+# SCRIPT_NAME="01-script-chaingraph.py"
 
 # Number of GPUs available
 NUM_GPUS=8
