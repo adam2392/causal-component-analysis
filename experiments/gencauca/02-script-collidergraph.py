@@ -50,7 +50,7 @@ def run_exp(training_seed, overwrite=False):
 
     devices = 1
     accelerator = "cuda"
-    max_epochs = 100
+    max_epochs = 200
 
     # uses soft interventions when True
     nonparametric_base_distr = True
