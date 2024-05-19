@@ -40,7 +40,7 @@ def run_exp(training_seed, overwrite=False):
             [1, 0, 1],
             [1, 0, 1],
             [1, 0, 1],
-            # [1, 0, 1],
+            [1, 0, 1],
         ]
     )
     noise_shift_type = "mean-std"
