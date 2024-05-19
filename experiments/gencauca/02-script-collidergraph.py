@@ -115,7 +115,7 @@ def run_exp(training_seed, overwrite=False):
         net_hidden_layers_cbn=net_hidden_layers_cbn,
     )
     checkpoint_root_dir = "checkpoints"
-    checkpoint_dir = Path(checkpoint_root_dir) / "default"
+    checkpoint_dir = Path(checkpoint_root_dir) / f"defaultcollider-samples={num_samples}-seed={training_seed}"
     logger = None
     wandb = False
     check_val_every_n_epoch = 1

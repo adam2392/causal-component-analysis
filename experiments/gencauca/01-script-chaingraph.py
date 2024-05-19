@@ -125,7 +125,7 @@ def run_exp(training_seed, overwrite=False):
         net_hidden_dim_cbn=net_hidden_dim_cbn,
         net_hidden_layers_cbn=net_hidden_layers_cbn,
     )
-    checkpoint_root_dir = "checkpoints"
+    checkpoint_root_dir = f"defaultchain-samples={num_samples}-seed={training_seed}"
     checkpoint_dir = Path(checkpoint_root_dir) / "default"
     logger = None
     wandb = False
