@@ -69,8 +69,8 @@ def run_exp(training_seed, overwrite=False):
 
     # Define the data generating model
     multi_env_dgp = make_multi_env_dgp(
-        latent_dim=3,
-        observation_dim=3,
+        latent_dim=latent_dim,
+        observation_dim=latent_dim,
         adjacency_matrix=adjacency_matrix,
         intervention_targets_per_env=interv_targets,
         noise_shift_type=noise_shift_type,
