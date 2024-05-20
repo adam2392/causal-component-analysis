@@ -18,7 +18,7 @@ PYTORCH_MPS_HIGH_WATERMARK_RATIO = 0.0
 
 
 def run_exp(training_seed, overwrite=False):
-    num_samples = 300_000
+    num_samples = 200_000
     print(f'Running experiment with seed: {training_seed}')
 
     results_dir = Path("./results/")
@@ -39,8 +39,8 @@ def run_exp(training_seed, overwrite=False):
             [1, 0, 1],
             [1, 0, 1],
             [1, 0, 1],
-            [1, 0, 1],
-            [1, 0, 1],
+            # [1, 0, 1],
+            # [1, 0, 1],
         ]
     )
     noise_shift_type = "mean-std"
