@@ -1,4 +1,5 @@
 from pathlib import Path
+import argparse
 
 import numpy as np
 import pytorch_lightning as pl
@@ -191,5 +192,20 @@ def run_exp(training_seed, overwrite=False):
 
 
 if __name__ == "__main__":
-    for training_seed in np.linspace(1, 10_000, 11, dtype=int):
-        run_exp(training_seed)
+    parser = argparse.ArgumentParser(
+        description="Run experiment for Causal Component Analysis (CauCA)."
+    )
+    parser.add_argument(
+        "--training-seed",
+        type=int,
+        default=None,
+        help="Training seed.",
+    )
+    args = parser.parse_args()
+
+    # if len(sys.argv) == 1:
+    if args.training_seed is None:
+        for training_seed in np.linspace(1, 10_000, 11, dtype=int):
+            run_exp(training_seed, overwrite=False)
+    else:
+        run_exp(args.training_seed, overwrite=False)

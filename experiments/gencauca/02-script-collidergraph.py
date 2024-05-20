@@ -194,6 +194,6 @@ if __name__ == "__main__":
     # if len(sys.argv) == 1:
     if args.training_seed is None:
         for training_seed in np.linspace(1, 10_000, 11, dtype=int):
-            run_exp(training_seed, overwrite=True)
+            run_exp(training_seed, overwrite=False)
     else:
-        run_exp(args.training_seed, overwrite=True)
+        run_exp(args.training_seed, overwrite=False)
