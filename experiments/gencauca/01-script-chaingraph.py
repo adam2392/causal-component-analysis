@@ -25,7 +25,7 @@ def run_exp(training_seed, overwrite=False):
 
     # chain-graph 01: all soft
     interv_targets = torch.tensor([[0, 0, 0], [0, 0, 1], [0, 0, 1]])
-    fname = results_dir / f"chaingraph-{training_seed}-samples={num_samples}-results.npz"
+    fname = results_dir / f"chaingraph-{training_seed}-results.npz"
     nonparametric_base_distr = True  # if True, we use soft, if false we use hard
 
     # Note: if interventions must be hard, or soft, we can replicate the same
@@ -34,16 +34,16 @@ def run_exp(training_seed, overwrite=False):
     # 1. If do(V3') and do(V3), we disentangle V1 and V2 from V3 (i.e V3 is ID wrt {v1, v2}),
     #    w/ obs V1 is also disentangled from V2 and V3.
     # 2. Then w/ do(V2)
-    interv_targets = torch.tensor(
-        [
-            [0, 0, 0],  # observational
-            [0, 0, 1],
-            [0, 0, 1],
-            [0, 1, 0],  # [0, 1, 0],
-        ]
-    )
-    nonparametric_base_distr = False  # if True, we use soft, if false we use hard
-    fname = results_dir / f"chaingraph-extraperfect-{training_seed}-samples={num_samples}-results.npz"
+    # interv_targets = torch.tensor(
+    #     [
+    #         [0, 0, 0],  # observational
+    #         [0, 0, 1],
+    #         [0, 0, 1],
+    #         [0, 1, 0],  # [0, 1, 0],
+    #     ]
+    # )
+    # nonparametric_base_distr = False  # if True, we use soft, if false we use hard
+    # fname = results_dir / f"chaingraph-extraperfect-{training_seed}-samples={num_samples}-results.npz"
 
     noise_shift_type = "mean-std"
     # noise_shift_type = 'mean'
@@ -58,7 +58,7 @@ def run_exp(training_seed, overwrite=False):
 
     
     batch_size = 4096
-    max_epochs = 200
+    max_epochs = 150
     accelerator = "mps"
     devices = 1
     accelerator = "cuda"
@@ -205,7 +205,7 @@ if __name__ == "__main__":
 
     # if len(sys.argv) == 1:
     if args.training_seed is None:
-        for training_seed in np.linspace(1, 10_000, 11, dtype=int):
+        for training_seed in np.linspace(1, 10_000, 50, dtype=int):
             run_exp(training_seed, overwrite=False)
     else:
         run_exp(args.training_seed, overwrite=False)
