@@ -173,7 +173,7 @@ def run_exp(training_seed, overwrite=False):
     for idx in range(latent_dim):
         for jdx in range(latent_dim):
             corr_arr_v_vhat[idx, jdx] = mean_correlation_coefficient(
-                vhat[:, (jdx,)], v[:, (idx,)]
+                vhat[:, (idx,)], v[:, (jdx,)]
             )
 
     print("Saving file to: ", fname)
