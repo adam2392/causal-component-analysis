@@ -6,7 +6,7 @@ SCRIPT_NAME="01-script-chaingraph.py"
 # SCRIPT_NAME="03-script-confoundergraph.py"
 
 # Number of GPUs available
-NUM_GPUS=8
+NUM_GPUS=7
 
 # Change to the directory containing the script
 # cd "$SCRIPT_DIR"
@@ -14,15 +14,16 @@ NUM_GPUS=8
 # Define the training seeds to match np.linspace(1, 10000, 11, dtype=int)
 # training_seeds=(1 1000 2000 3000 4000 5000 6000 7000 8000 9000 10000)
 # Define the training seeds from 1 to 100
-training_seeds=($(seq 1 100))
+training_seeds=($(seq 1 50))
 
 # Loop over the training seeds and submit a job for each seed
 for i in "${!training_seeds[@]}"
 do
-  TRAINING_SEED=$(expr ${training_seeds[$i]} \* 20)
+  # TRAINING_SEED=$(expr ${training_seeds[$i]} \* 20)
+  TRAINING_SEED=${training_seeds[$i]}
   
   # Calculate the GPU index to use for this job
-  GPU_INDEX=$((i % NUM_GPUS))
+  GPU_INDEX=$((i % NUM_GPUS)) + 1
 
   # Set the environment variable for the GPU
   export CUDA_VISIBLE_DEVICES=$GPU_INDEX
