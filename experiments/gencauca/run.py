@@ -17,50 +17,49 @@ from model.utils import mean_correlation_coefficient
 PYTORCH_MPS_HIGH_WATERMARK_RATIO = 0.0
 
 
-def run_exp(training_seed, overwrite=False):
-    num_samples = 500_000
+import ast
 
+def parse_nested_list(string):
+    try:
+        # Use ast.literal_eval to safely evaluate the string as a Python expression
+        parsed_list = ast.literal_eval(string)
+        # Check if the parsed expression is indeed a list
+        if isinstance(parsed_list, list):
+            return parsed_list
+        else:
+            raise ValueError
+    except (ValueError, SyntaxError):
+        raise argparse.ArgumentTypeError(f"Invalid list format: '{string}'")
+
+
+def run_exp(
+    sim_name,
+    training_seed,
+    adjacency_matrix,
+    intervention_targets,
+    noise_shift_type="mean-std",
+    num_samples=200_000,
+    batch_size=4096,
+    max_epochs=200,
+    overwrite=False,
+):
     results_dir = Path("./results/")
     results_dir.mkdir(exist_ok=True, parents=True)
 
-    # chain-graph 01: all soft
-    interv_targets = torch.tensor([[0, 0, 0], [0, 0, 1], [0, 0, 1]])
-    fname = results_dir / f"chaingraph-{training_seed}-results.npz"
+    fname = (
+        results_dir
+        / f"{sim_name}-seed={training_seed}-nsamples={num_samples}-results.npz"
+    )
     nonparametric_base_distr = True  # if True, we use soft, if false we use hard
 
-    # Note: if interventions must be hard, or soft, we can replicate the same
-    # theoretical result with 2 hard on V2 and 2 hard on V3
-    #
-    # 1. If do(V3') and do(V3), we disentangle V1 and V2 from V3 (i.e V3 is ID wrt {v1, v2}),
-    #    w/ obs V1 is also disentangled from V2 and V3.
-    # 2. Then w/ do(V2)
-    # interv_targets = torch.tensor(
-    #     [
-    #         [0, 0, 0],  # observational
-    #         [0, 0, 1],
-    #         [0, 0, 1],
-    #         [0, 1, 0],  # [0, 1, 0],
-    #     ]
-    # )
-    # nonparametric_base_distr = False  # if True, we use soft, if false we use hard
-    # fname = results_dir / f"chaingraph-extraperfect-{training_seed}-samples={num_samples}-results.npz"
-
-    noise_shift_type = "mean-std"
-    # noise_shift_type = 'mean'
     if not overwrite and fname.exists():
         return
 
     pl.seed_everything(training_seed, workers=True)
 
-    # chain graph V1 -> V2 -> V3
-    latent_dim = 3
-    adjacency_matrix = np.array([[0, 1, 0], [0, 0, 1], [0, 0, 0]])
-
-    
-    batch_size = 4096
-    max_epochs = 150
-    accelerator = "mps"
-    devices = 1
+    latent_dim = len(adjacency_matrix)
+    # accelerator = "mps"
+    # devices = 1
     accelerator = "cuda"
     devices = 1
     # accelerator = "cpu"
@@ -69,10 +68,10 @@ def run_exp(training_seed, overwrite=False):
 
     # Define the data generating model
     multi_env_dgp = make_multi_env_dgp(
-        latent_dim=3,
-        observation_dim=3,
+        latent_dim=latent_dim,
+        observation_dim=latent_dim,
         adjacency_matrix=adjacency_matrix,
-        intervention_targets_per_env=interv_targets,
+        intervention_targets_per_env=intervention_targets,
         noise_shift_type=noise_shift_type,
         mixing="nonlinear",
         scm="linear",
@@ -90,7 +89,7 @@ def run_exp(training_seed, overwrite=False):
         num_samples_per_env=num_samples,
         batch_size=batch_size,
         num_workers=n_jobs,
-        intervention_targets_per_env=interv_targets,
+        intervention_targets_per_env=intervention_targets,
     )
     data_module.setup()
 
@@ -113,7 +112,7 @@ def run_exp(training_seed, overwrite=False):
         adjacency_matrix=data_module.medgp.adjacency_matrix,
         k_flows=k_flows,
         lr=lr,
-        intervention_targets_per_env=interv_targets,
+        intervention_targets_per_env=intervention_targets,
         lr_scheduler=lr_scheduler,
         lr_min=lr_min,
         adjacency_misspecified=False,
@@ -126,7 +125,7 @@ def run_exp(training_seed, overwrite=False):
         net_hidden_dim_cbn=net_hidden_dim_cbn,
         net_hidden_layers_cbn=net_hidden_layers_cbn,
     )
-    checkpoint_root_dir = f"chain-samples={num_samples}-seed={training_seed}"
+    checkpoint_root_dir = f"{sim_name}-samples={num_samples}-seed={training_seed}"
     checkpoint_dir = Path(checkpoint_root_dir) / "default"
     logger = None
     wandb = False
@@ -161,7 +160,6 @@ def run_exp(training_seed, overwrite=False):
     trainer.test(datamodule=data_module)
 
     # save the output
-
     x, v, u, e, int_target, log_prob_gt = data_module.test_dataset[:]
     print(x.shape)
     print(e.shape)
@@ -172,7 +170,7 @@ def run_exp(training_seed, overwrite=False):
     corr_arr_v_vhat = np.zeros((latent_dim, latent_dim))
     for idx in range(latent_dim):
         for jdx in range(latent_dim):
-            corr_arr_v_vhat[idx, jdx] = mean_correlation_coefficient(
+            corr_arr_v_vhat[jdx, idx] = mean_correlation_coefficient(
                 vhat[:, (idx,)], v[:, (jdx,)]
             )
 
@@ -195,24 +193,23 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Run experiment for Causal Component Analysis (CauCA)."
     )
-    # parser.add_argument('--training-seed', type=int, help='training seed')
-    # parser.add_argument('--sim_graphs', type=str, help='simulation graphs')
-    # parser.add_argument('--intervention_targets', type=str, help='intervention targets')
-    # parser.add_argument('--noise_shift_type', type=str, help='noise shift type')
-    # parser.add_argument('--batch_size', type=int, help='batch size')
-    # parser.add_argument('--max_epochs', type=int, help='maximum epochs')
-
-    parser.add_argument(
-        "--training-seed",
-        type=int,
-        default=None,
-        help="Training seed.",
-    )
+    parser.add_argument("--sim-name", type=str, help="Simulation name")
+    parser.add_argument("--training-seed", type=int, help="training seed")
+    parser.add_argument("--sim_graphs", type=parse_nested_list, help="simulation graphs")
+    parser.add_argument("--intervention_targets", type=parse_nested_list, help="intervention targets")
+    parser.add_argument("--noise_shift_type", type=str, help="noise shift type")
+    parser.add_argument("--num_samples", type=int, help="number of samples")
+    parser.add_argument("--batch_size", type=int, help="batch size")
+    parser.add_argument("--max_epochs", type=int, help="maximum epochs")
     args = parser.parse_args()
 
-    # if len(sys.argv) == 1:
-    if args.training_seed is None:
-        for training_seed in np.linspace(1, 10_000, 50, dtype=int):
-            run_exp(training_seed, overwrite=False)
-    else:
-        run_exp(args.training_seed, overwrite=False)
+    run_exp(
+        args.sim_name,
+        args.training_seed,
+        adjacency_matrix=args.sim_graphs,
+        intervention_targets=args.intervention_targets,
+        noise_shift_type=args.noise_shift_type,
+        num_samples=args.num_samples,
+        batch_size=args.batch_size,
+        max_epochs=args.max_epochs,
+    )

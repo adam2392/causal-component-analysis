@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Directory containing the Python script
-SCRIPT_NAME="02-script-collidergraph.py"
-# SCRIPT_NAME="01-script-chaingraph.py"
+# SCRIPT_NAME="02-script-collidergraph.py"
+SCRIPT_NAME="01-script-chaingraph.py"
 # SCRIPT_NAME="03-script-confoundergraph.py"
 
 # Number of GPUs available
@@ -12,8 +12,9 @@ NUM_GPUS=8
 # cd "$SCRIPT_DIR"
 
 # Define the training seeds to match np.linspace(1, 10000, 11, dtype=int)
-training_seeds=(1 1000 2000 3000 4000 5000 6000 7000 8000 9000 10000)
-
+# training_seeds=(1 1000 2000 3000 4000 5000 6000 7000 8000 9000 10000)
+# Define the training seeds from 1 to 100
+training_seeds=($(seq 1 100))
 
 # Loop over the training seeds and submit a job for each seed
 for i in "${!training_seeds[@]}"
